@@ -4,14 +4,16 @@ import (
 	"fmt"
 )
 
+var notSent = 0
+
 func main() {
-	output := make(chan string, 255)
+	//output := make(chan string, 255)
 
-	d := NewDispather(output, "testDispatcher")
+	d := NewDispather("testDispatcher")
 
-	c1 := NewClient(1, output, d)
-	c2 := NewClient(2, output, d)
-	c3 := NewClient(3, output, d)
+	c1 := NewClient(1, d)
+	c2 := NewClient(2, d)
+	c3 := NewClient(3, d)
 
 	c1.Say(42, "first message")
 
@@ -25,8 +27,19 @@ func main() {
 
 	fmt.Print("Talking\n")
 	c1.Say(42, "second message")
+	c2.Say(42, "third message")
 
-	//for message := range output {
-	//	fmt.Printf("%s\n", message)
+	//fmt.Printf("Due for sending: %d\n", notSent)
+
+	//for {
+	//	for message := range output {
+	//		fmt.Printf("[OUTPUT] %s\n", message)
+	//	}
+	//
 	//}
+
+	for notSent > 0 {
+	}
+
+	//fmt.Printf("Due for sending: %d\n", notSent)
 }

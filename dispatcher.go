@@ -6,36 +6,36 @@ import (
 
 type Dispatcher struct {
 	name string
-	output chan string
+	//output chan string
 	nextId int
 	clients [255]*Client
 }
 
-func NewDispather(output chan string, foo string)	*Dispatcher  {
+func NewDispather(foo string)	*Dispatcher  {
 	d := & Dispatcher{name: foo}
-	d.output = output
+	//d.output = output
 	//go d.dispatch()
 	return d
 }
 
 func (d *Dispatcher) Dispatch(message string) {
-	//d.output <- "[OUTPUT] Dispatching"
+	//d.output <- "Dispatching"
 
-	//d.output <- fmt.Sprintf("[OUTPUT] message is '%s'", message)
+	//d.output <- fmt.Sprintf("message is '%s'", message)
 	fmt.Printf("Dispatching message '%s'\n", message)
 	for i, receiver := range d.clients {
 		if (receiver == nil) {
 			continue
 		}
-		
+
 		fmt.Printf("\tto client %d\n", i)
-		receiver.Send(message)
+		notSent++
+		go receiver.Send(message)
 	}
 }
 
 func (d *Dispatcher) Subscribe(c *Client) {
 	d.nextId++
 	id := d.nextId
-	fmt.Printf("client id is %d\n", c.id)
 	d.clients[id] = c
 }
