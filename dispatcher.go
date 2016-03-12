@@ -5,12 +5,12 @@ import (
 )
 
 type Dispatcher struct {
-	name string
-	clients map[string]*Client
+	name    string
+	clients map[int64]*Client
 }
 
-func NewDispather(foo string)	*Dispatcher  {
-	return & Dispatcher{name: foo, clients: make(map[string]*Client)}
+func NewDispather(foo string) *Dispatcher {
+	return &Dispatcher{name: foo, clients: make(map[int64]*Client)}
 }
 
 func (d *Dispatcher) Dispatch(message *Message) {
@@ -20,7 +20,7 @@ func (d *Dispatcher) Dispatch(message *Message) {
 	fmt.Printf("Dispatching message '%s'\n", message.Body())
 	for _, id := range message.Receivers() {
 		if receiver := d.clients[id]; receiver != nil {
-			fmt.Printf("\tto client %s\n", receiver.id)
+			fmt.Printf("\tto client %d\n", receiver.id)
 			notSent++
 			receiver.Send(message.Body())
 		}

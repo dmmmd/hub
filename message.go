@@ -1,18 +1,36 @@
 package main
 
+const MessageTypeRelay string = "relay"
+const MessageTypeIdentity string = "identity"
+const MessageTypeList string = "list"
+
 type Message struct {
-	receivers []string
-	body string
+	command   string
+	receivers []int64
+	body      string
 }
 
-func NewMessage(receivers []string, body string) *Message {
-	return &Message{body: body, receivers: receivers}
+func NewRelayMessage(receivers []int64, body string) *Message {
+	return &Message{command: MessageTypeRelay, body: body, receivers: receivers}
 }
 
-func (m *Message) Receivers() []string {
+func NewIdentityMessage() *Message {
+	return &Message{command: MessageTypeIdentity}
+}
+
+func NewListMessage() *Message {
+	return &Message{command: MessageTypeList}
+}
+
+func (m *Message) Command() string {
+	return m.command
+}
+
+func (m *Message) Receivers() []int64 {
 	return m.receivers
 }
 
 func (m *Message) Body() string {
+	//return "42"
 	return m.body
 }

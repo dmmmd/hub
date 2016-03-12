@@ -7,15 +7,15 @@ func main() {
 
 	d := NewDispather("testDispatcher")
 
-	c1 := NewClient("One", d)
-	c2 := NewClient("Two", d)
-	c3 := NewClient("Three", d)
+	c1 := NewClient(100, d)
+	c2 := NewClient(200, d)
+	c3 := NewClient(300, d)
 
-	message1 := NewMessage([]string{"Two", "Three", "Umad1"}, "first message 1")
-	message2 := NewMessage([]string{"One", "Two", "Three"}, "second message 2")
-	message3 := NewMessage([]string{"One", "Three"}, "third message 3")
-	message4 := NewMessage([]string{"One", "Two"}, "fourth message 4")
-	message5 := NewMessage([]string{"Umad2", "One", "Three", "One", "Two"}, "fifth message 5")
+	message1 := NewRelayMessage([]int64{200, 300, 100500}, "first message 1")
+	message2 := NewRelayMessage([]int64{100, 200, 300}, "second message 2")
+	message3 := NewRelayMessage([]int64{100, 300}, "third message 3")
+	message4 := NewRelayMessage([]int64{100, 200}, "fourth message 4")
+	message5 := NewRelayMessage([]int64{9001, 100, 300, 100, 200}, "fifth message 5")
 
 	c1.Say(message1)
 
