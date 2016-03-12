@@ -11,10 +11,11 @@ func main() {
 	c2 := NewClient("Two", d)
 	c3 := NewClient("Three", d)
 
-	message1 := NewMessage([]string{"Two", "Three"}, "first message 1")
+	message1 := NewMessage([]string{"Two", "Three", "Umad1"}, "first message 1")
 	message2 := NewMessage([]string{"One", "Two", "Three"}, "second message 2")
 	message3 := NewMessage([]string{"One", "Three"}, "third message 3")
 	message4 := NewMessage([]string{"One", "Two"}, "fourth message 4")
+	message5 := NewMessage([]string{"Umad2", "One", "Three", "One", "Two"}, "fifth message 5")
 
 	c1.Say(message1)
 
@@ -25,6 +26,7 @@ func main() {
 	c1.Say(message2)
 	c2.Say(message3)
 	c3.Say(message4)
+	c2.Say(message5)
 
 	//fmt.Printf("Due for sending: %d\n", notSent)
 
