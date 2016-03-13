@@ -5,28 +5,53 @@ import (
 )
 
 type Dispatcher struct {
-	name    string
 	clients map[int64]*Client
 }
 
-func NewDispather(foo string) *Dispatcher {
-	return &Dispatcher{name: foo, clients: make(map[int64]*Client)}
+func NewDispather() *Dispatcher {
+	return &Dispatcher{clients: make(map[int64]*Client)}
 }
 
 func (d *Dispatcher) Dispatch(message *Message) {
-	//d.output <- "Dispatching"
+	switch message.Command() {
+	case MessageTypeRelay:
+		d.relay(message)
+	case MessageTypeIdentity:
+		d.identify(message.Sender())
+	case MessageTypeList:
+		d.list(message.Sender())
+	}
 
-	//d.output <- fmt.Sprintf("message is '%s'", message)
-	fmt.Printf("Dispatching message '%s'\n", message.Body())
-	for _, id := range message.Receivers() {
-		if receiver := d.clients[id]; receiver != nil {
-			fmt.Printf("\tto client %d\n", receiver.id)
-			notSent++
-			receiver.Send(message.Body())
+}
+
+func (d *Dispatcher) identify(sender int64) {
+	d.sendBody(sender, fmt.Sprintf("Your ID is %d", sender))
+}
+
+func (d *Dispatcher) list(sender int64) {
+	var clientList string
+	for id, _ := range d.clients {
+		if id != sender {
+			clientList += fmt.Sprintf("%d, ", id)
 		}
+	}
+
+	d.sendBody(sender, fmt.Sprintf("Client IDs are %s", clientList))
+}
+
+func (d *Dispatcher) relay(message *Message) {
+	for _, id := range message.Receivers() {
+		d.sendBody(id, message.Body())
 	}
 }
 
 func (d *Dispatcher) Subscribe(c *Client) {
 	d.clients[c.id] = c
+}
+
+func (d *Dispatcher) sendBody(receiver int64, body string) {
+	if client := d.clients[receiver]; client != nil {
+		client.Send(body + "\n")
+	}
+
 }

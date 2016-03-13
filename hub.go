@@ -1,37 +1,52 @@
 package main
 
-var notSent = 0
+import (
+	"fmt"
+	"net"
+	"os"
+)
+
+const serverPort = 8888
 
 func main() {
-	//output := make(chan string, 255)
+	listener := createListener()
+	defer listener.Close()
 
-	d := NewDispather("testDispatcher")
+	registry := new(Registry)
+	dispatcher := NewDispather()
 
-	c1 := NewClient(100, d)
-	c2 := NewClient(200, d)
-	c3 := NewClient(300, d)
+	for {
+		connection, err := listener.AcceptTCP()
+		if err != nil {
+			fmt.Printf("Can't accept connection: %s", err.Error())
+			os.Exit(1)
+		}
 
-	message1 := NewRelayMessage([]int64{200, 300, 100500}, "first message 1")
-	message2 := NewRelayMessage([]int64{100, 200, 300}, "second message 2")
-	message3 := NewRelayMessage([]int64{100, 300}, "third message 3")
-	message4 := NewRelayMessage([]int64{100, 200}, "fourth message 4")
-	message5 := NewRelayMessage([]int64{9001, 100, 300, 100, 200}, "fifth message 5")
+		go serveConnection(registry, dispatcher, connection)
+	}
+}
 
-	c1.Say(message1)
+func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net.TCPConn) {
+	client := NewClient(registry.NextId(), connection)
+	dispatcher.Subscribe(client)
 
-	d.Subscribe(c1)
-	d.Subscribe(c2)
-	d.Subscribe(c3)
-
-	c1.Say(message2)
-	c2.Say(message3)
-	c3.Say(message4)
-	c2.Say(message5)
-
-	//fmt.Printf("Due for sending: %d\n", notSent)
-
-	for notSent > 0 {
+	for {
+		message := client.NextMessage()
+		dispatcher.Dispatch(message)
 	}
 
-	//fmt.Printf("Due for sending: %d\n", notSent)
+	connection.Close()
+}
+
+func createListener() *net.TCPListener {
+	ip := net.IPv4(127, 0, 0, 1)
+	addr := &net.TCPAddr{Port: serverPort, IP: ip}
+	listener, err := net.ListenTCP("tcp", addr)
+
+	if err != nil {
+		fmt.Printf("Can't start listening: %s", err.Error())
+		os.Exit(1)
+	}
+
+	return listener
 }

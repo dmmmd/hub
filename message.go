@@ -6,24 +6,29 @@ const MessageTypeList string = "list"
 
 type Message struct {
 	command   string
+	sender    int64
 	receivers []int64
 	body      string
 }
 
-func NewRelayMessage(receivers []int64, body string) *Message {
-	return &Message{command: MessageTypeRelay, body: body, receivers: receivers}
+func NewRelayMessage(sender int64, receivers []int64, body string) *Message {
+	return &Message{command: MessageTypeRelay, body: body, sender: sender, receivers: receivers}
 }
 
-func NewIdentityMessage() *Message {
-	return &Message{command: MessageTypeIdentity}
+func NewIdentityMessage(sender int64) *Message {
+	return &Message{command: MessageTypeIdentity, sender: sender}
 }
 
-func NewListMessage() *Message {
-	return &Message{command: MessageTypeList}
+func NewListMessage(sender int64) *Message {
+	return &Message{command: MessageTypeList, sender: sender}
 }
 
 func (m *Message) Command() string {
 	return m.command
+}
+
+func (m *Message) Sender() int64 {
+	return m.sender
 }
 
 func (m *Message) Receivers() []int64 {
