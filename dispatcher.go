@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 type Dispatcher struct {
-	clients map[int64]*Client
+	clients      map[int64]*Client
+	clientsMutex sync.Mutex
 }
 
 func NewDispather() *Dispatcher {
@@ -30,11 +32,14 @@ func (d *Dispatcher) identify(sender int64) {
 
 func (d *Dispatcher) list(sender int64) {
 	var clientList string
+
+	d.lockClients()
 	for id, _ := range d.clients {
 		if id != sender {
 			clientList += fmt.Sprintf("%d, ", id)
 		}
 	}
+	d.unlockClients()
 
 	d.sendBody(sender, fmt.Sprintf("Client IDs are %s", clientList))
 }
@@ -46,12 +51,30 @@ func (d *Dispatcher) relay(message *Message) {
 }
 
 func (d *Dispatcher) Subscribe(c *Client) {
+	d.lockClients()
 	d.clients[c.id] = c
+	d.unlockClients()
 }
 
 func (d *Dispatcher) sendBody(receiver int64, body string) {
-	if client := d.clients[receiver]; client != nil {
+	client := d.client(receiver)
+
+	if client != nil {
 		client.Send(body + "\n")
 	}
+}
 
+func (d *Dispatcher) client(id int64) *Client {
+	d.lockClients()
+	client := d.clients[id]
+	d.unlockClients()
+	return client
+}
+
+func (d *Dispatcher) lockClients() {
+	d.clientsMutex.Lock()
+}
+
+func (d *Dispatcher) unlockClients() {
+	d.clientsMutex.Unlock()
 }
