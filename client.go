@@ -44,7 +44,7 @@ func (c *Client) NextMessage() *Message {
 }
 
 func (c *Client) readLine() string {
-	bytes := make([]byte, 1024)
+	bytes := make([]byte, 1048576)
 	len, _ := c.connection.Read(bytes)
 
 	//if err != nil {
