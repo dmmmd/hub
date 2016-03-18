@@ -23,13 +23,14 @@ func acceptConnections(registry *Registry, dispatcher *Dispatcher, listener *net
 		if err != nil {
 			fmt.Printf("Can't accept connection: %s", err.Error())
 		} else {
-			go serveConnection(registry, dispatcher, connection)
+			conn := newConnection(connection)
+			go serveConnection(registry, dispatcher, conn)
 		}
 	}
 }
 
-func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net.TCPConn) {
-	client := NewClient(registry.NextId(), connection)
+func serveConnection(registry *Registry, dispatcher *Dispatcher, connection ConnectionInterface) {
+	client := newClient(registry.NextId(), connection)
 	dispatcher.Subscribe(client)
 	defer connection.Close()
 
@@ -39,7 +40,7 @@ func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net
 		switch {
 		case err == nil:
 			dispatcher.Dispatch(message)
-		case err.ConnectionLost():
+		case err.ConnectionError():
 			dispatcher.Unsubscribe(client)
 			// case err.InvalidMessage(): // Just continue
 		}

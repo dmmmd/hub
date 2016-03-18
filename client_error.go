@@ -1,31 +1,31 @@
 package main
 
 const ClientErrorInvalidMessage = "invalid_message"
-const ClientErrorConnectionLost = "connection_lost"
+const ClientErrorConnection = "connection_error"
 const ClientErrorInvalidReceivers = "invalid_receivers"
 
 type ClientError struct {
 	problem string
 }
 
-func NewClientInvalidMessageError() *ClientError {
+func NewClientInvalidCommandError() *ClientError {
 	return &ClientError{problem: ClientErrorInvalidMessage}
 }
 
-func NewClientConnectionLostError() *ClientError {
-	return &ClientError{problem: ClientErrorConnectionLost}
+func NewClientConnectionError() *ClientError {
+	return &ClientError{problem: ClientErrorConnection}
 }
 
-func NewClientInvalidReceivers() *ClientError {
+func NewClientInvalidReceiversError() *ClientError {
 	return &ClientError{problem: ClientErrorInvalidReceivers}
 }
 
-func (e *ClientError) InvalidMessage() bool {
+func (e *ClientError) InvalidCommand() bool {
 	return e.problem == ClientErrorInvalidMessage
 }
 
-func (e *ClientError) ConnectionLost() bool {
-	return e.problem == ClientErrorConnectionLost
+func (e *ClientError) ConnectionError() bool {
+	return e.problem == ClientErrorConnection
 }
 
 func (e *ClientError) InvalidReceivers() bool {

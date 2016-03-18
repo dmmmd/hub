@@ -18,15 +18,15 @@ type Message struct {
 	body      string
 }
 
-func NewRelayMessage(sender int64, receivers []int64, body string) *Message {
+func newRelayMessage(sender int64, receivers []int64, body string) *Message {
 	return &Message{command: MessageTypeRelay, body: body, sender: sender, receivers: receivers}
 }
 
-func NewIdentityMessage(sender int64) *Message {
+func newIdentityMessage(sender int64) *Message {
 	return &Message{command: MessageTypeIdentity, sender: sender}
 }
 
-func NewListMessage(sender int64) *Message {
+func newListMessage(sender int64) *Message {
 	return &Message{command: MessageTypeList, sender: sender}
 }
 

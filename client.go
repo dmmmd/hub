@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"strconv"
 	"strings"
 )
@@ -15,10 +14,10 @@ type ClientInterface interface {
 type Client struct {
 	id         int64
 	outbox     chan string
-	connection *net.TCPConn
+	connection ConnectionInterface
 }
 
-func NewClient(id int64, connection *net.TCPConn) *Client {
+func newClient(id int64, connection ConnectionInterface) *Client {
 	return &Client{id: id, connection: connection, outbox: make(chan string, 255)}
 }
 
@@ -27,10 +26,9 @@ func (c *Client) Id() int64 {
 }
 
 func (c *Client) Send(message string) {
-	c.outbox <- message
+	c.outbox <- message // To send them in order
 	go func() {
-		message := <-c.outbox
-		c.connection.Write([]byte(message))
+		c.connection.Write(<-c.outbox)
 	}()
 }
 
@@ -45,17 +43,17 @@ func (c *Client) NextMessage() (MessageInterface, *ClientError) {
 	cmd := lines[0]
 	switch cmd {
 	case MessageTypeIdentity:
-		return NewIdentityMessage(c.id), nil
+		return newIdentityMessage(c.id), nil
 	case MessageTypeList:
-		return NewListMessage(c.id), nil
+		return newListMessage(c.id), nil
 	}
 
 	if cmd != MessageTypeRelay {
-		return nil, NewClientInvalidMessageError()
+		return nil, NewClientInvalidCommandError()
 	}
 
 	if len(lines) < 3 {
-		return nil, NewClientInvalidMessageError()
+		return nil, NewClientInvalidCommandError()
 	}
 
 	// Receivers
@@ -66,7 +64,7 @@ func (c *Client) NextMessage() (MessageInterface, *ClientError) {
 
 	// Body
 	body := strings.Join(lines[2:], "\n")
-	return NewRelayMessage(c.id, []int64(receivers), body), nil
+	return newRelayMessage(c.id, []int64(receivers), body), nil
 }
 
 func (c *Client) readMessage() (string, *ClientError) {
@@ -91,15 +89,13 @@ func (c *Client) readMessage() (string, *ClientError) {
 }
 
 func (c *Client) readLine() (string, *ClientError) {
-	bytes := make([]byte, 1048576)
-	len, err := c.connection.Read(bytes)
+	line, err := c.connection.Read()
 
 	if err != nil {
-		c.connection.Close()
-		return "", NewClientConnectionLostError()
+		return "", NewClientConnectionError()
 	}
 
-	return strings.TrimSpace(string(bytes[:len])), nil
+	return strings.TrimSpace(line), nil
 }
 
 func parseReceivers(line string) ([]int64, *ClientError) {
@@ -108,7 +104,7 @@ func parseReceivers(line string) ([]int64, *ClientError) {
 		word = strings.TrimSpace(word)
 		id, err := strconv.ParseInt(word, 10, 64)
 		if err != nil {
-			return make([]int64, 0), NewClientInvalidReceivers()
+			return make([]int64, 0), NewClientInvalidReceiversError()
 		}
 
 		receivers = append(receivers, id)
