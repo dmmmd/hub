@@ -13,7 +13,7 @@ func main() {
 	defer listener.Close()
 
 	registry := new(Registry)
-	dispatcher := NewDispather()
+	dispatcher := newDispather()
 	acceptConnections(registry, dispatcher, listener)
 }
 
@@ -32,6 +32,7 @@ func acceptConnections(registry *Registry, dispatcher *Dispatcher, listener *net
 func serveConnection(registry *Registry, dispatcher *Dispatcher, connection ConnectionInterface) {
 	client := newClient(registry.NextId(), connection)
 	dispatcher.Subscribe(client)
+
 	defer connection.Close()
 
 	for {
@@ -42,6 +43,7 @@ func serveConnection(registry *Registry, dispatcher *Dispatcher, connection Conn
 			dispatcher.Dispatch(message)
 		case err.ConnectionError():
 			dispatcher.Unsubscribe(client)
+			return
 			// case err.InvalidMessage(): // Just continue
 		}
 	}

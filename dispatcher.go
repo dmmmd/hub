@@ -2,15 +2,22 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 )
+
+type DispatcherInterface interface {
+	Dispatch(message MessageInterface)
+	Subscribe(client ClientInterface)
+	Unsubscribe(client ClientInterface)
+}
 
 type Dispatcher struct {
 	clients      map[int64]ClientInterface
 	clientsMutex sync.Mutex
 }
 
-func NewDispather() *Dispatcher {
+func newDispather() *Dispatcher {
 	return &Dispatcher{clients: make(map[int64]ClientInterface)}
 }
 
@@ -27,21 +34,21 @@ func (d *Dispatcher) Dispatch(message MessageInterface) {
 }
 
 func (d *Dispatcher) identify(sender int64) {
-	d.sendBody(sender, fmt.Sprintf("Your ID is %d", sender))
+	d.sendBody(sender, fmt.Sprintf("[Server] Your ID is %d", sender))
 }
 
 func (d *Dispatcher) list(sender int64) {
-	var clientList string
+	var clientList []string
 
 	d.lockClients()
 	for id, _ := range d.clients {
 		if id != sender {
-			clientList += fmt.Sprintf("%d, ", id)
+			clientList = append(clientList, fmt.Sprintf("%d", id))
 		}
 	}
 	d.unlockClients()
 
-	d.sendBody(sender, fmt.Sprintf("Client IDs are %s", clientList))
+	d.sendBody(sender, fmt.Sprintf("[Server] Client IDs are %s", strings.Join(clientList, ", ")))
 }
 
 func (d *Dispatcher) relay(message MessageInterface) {
@@ -66,7 +73,7 @@ func (d *Dispatcher) sendBody(receiver int64, body string) {
 	client := d.client(receiver)
 
 	if client != nil {
-		client.Send(body + "\n")
+		client.Send(body + "\n\n")
 	}
 }
 
