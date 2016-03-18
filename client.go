@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+type ClientInterface interface {
+	Id() int64
+	Send(message string)
+	NextMessage() (MessageInterface, *ClientError)
+}
+
 type Client struct {
 	id         int64
 	outbox     chan string
@@ -16,6 +22,10 @@ func NewClient(id int64, connection *net.TCPConn) *Client {
 	return &Client{id: id, connection: connection, outbox: make(chan string, 255)}
 }
 
+func (c *Client) Id() int64 {
+	return c.id
+}
+
 func (c *Client) Send(message string) {
 	c.outbox <- message
 	go func() {
@@ -24,7 +34,7 @@ func (c *Client) Send(message string) {
 	}()
 }
 
-func (c *Client) NextMessage() (*Message, *ClientError) {
+func (c *Client) NextMessage() (MessageInterface, *ClientError) {
 	cmd, err := c.readLine()
 	if err != nil {
 		return nil, err

@@ -6,15 +6,15 @@ import (
 )
 
 type Dispatcher struct {
-	clients      map[int64]*Client
+	clients      map[int64]ClientInterface
 	clientsMutex sync.Mutex
 }
 
 func NewDispather() *Dispatcher {
-	return &Dispatcher{clients: make(map[int64]*Client)}
+	return &Dispatcher{clients: make(map[int64]ClientInterface)}
 }
 
-func (d *Dispatcher) Dispatch(message *Message) {
+func (d *Dispatcher) Dispatch(message MessageInterface) {
 	switch message.Command() {
 	case MessageTypeRelay:
 		d.relay(message)
@@ -44,21 +44,21 @@ func (d *Dispatcher) list(sender int64) {
 	d.sendBody(sender, fmt.Sprintf("Client IDs are %s", clientList))
 }
 
-func (d *Dispatcher) relay(message *Message) {
+func (d *Dispatcher) relay(message MessageInterface) {
 	for _, id := range message.Receivers() {
 		d.sendBody(id, message.Body())
 	}
 }
 
-func (d *Dispatcher) Subscribe(c *Client) {
+func (d *Dispatcher) Subscribe(c ClientInterface) {
 	d.lockClients()
-	d.clients[c.id] = c
+	d.clients[c.Id()] = c
 	d.unlockClients()
 }
 
-func (d *Dispatcher) Unsubscribe(c *Client) {
+func (d *Dispatcher) Unsubscribe(c ClientInterface) {
 	d.lockClients()
-	delete(d.clients, c.id)
+	delete(d.clients, c.Id())
 	d.unlockClients()
 }
 
@@ -70,7 +70,7 @@ func (d *Dispatcher) sendBody(receiver int64, body string) {
 	}
 }
 
-func (d *Dispatcher) client(id int64) *Client {
+func (d *Dispatcher) client(id int64) ClientInterface {
 	d.lockClients()
 	client := d.clients[id]
 	d.unlockClients()

@@ -4,6 +4,13 @@ const MessageTypeRelay string = "relay"
 const MessageTypeIdentity string = "identity"
 const MessageTypeList string = "list"
 
+type MessageInterface interface {
+	Command() string
+	Sender() int64
+	Receivers() []int64
+	Body() string
+}
+
 type Message struct {
 	command   string
 	sender    int64
