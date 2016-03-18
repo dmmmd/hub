@@ -34,7 +34,8 @@ func (d *Dispatcher) Dispatch(message MessageInterface) {
 }
 
 func (d *Dispatcher) identify(sender int64) {
-	d.sendBody(sender, fmt.Sprintf("[Server] Your ID is %d", sender))
+	body := fmt.Sprintf("[Server] Your ID is %d\n", sender)
+	d.sendBody(sender, &body)
 }
 
 func (d *Dispatcher) list(sender int64) {
@@ -48,7 +49,8 @@ func (d *Dispatcher) list(sender int64) {
 	}
 	d.unlockClients()
 
-	d.sendBody(sender, fmt.Sprintf("[Server] Client IDs are %s", strings.Join(clientList, ", ")))
+	body := fmt.Sprintf("[Server] Client IDs are %s\n", strings.Join(clientList, ", "))
+	d.sendBody(sender, &body)
 }
 
 func (d *Dispatcher) relay(message MessageInterface) {
@@ -69,11 +71,11 @@ func (d *Dispatcher) Unsubscribe(c ClientInterface) {
 	d.unlockClients()
 }
 
-func (d *Dispatcher) sendBody(receiver int64, body string) {
+func (d *Dispatcher) sendBody(receiver int64, body *string) {
 	client := d.client(receiver)
 
 	if client != nil {
-		client.Send(body + "\n\n")
+		client.Send(body)
 	}
 }
 

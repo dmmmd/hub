@@ -62,7 +62,7 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(MessageTypeRelay, message.Command())
-	assert.Equal("foobar 1\nfoobar 2\n\nfoobar 3\n", message.Body())
+	assert.Equal("foobar 1\nfoobar 2\n\nfoobar 3\n", *message.Body())
 
 	receivers := message.Receivers()
 	assert.Len(receivers, 3)
@@ -133,8 +133,8 @@ func TestSendWritesToConnection(t *testing.T) {
 	conn.On("Write", messages[1]).Return(nil)
 
 	c := newClient(42, conn)
-	c.Send(messages[0])
-	c.Send(messages[1])
+	c.Send(&messages[0])
+	c.Send(&messages[1])
 
 	time.Sleep(time.Millisecond) // For stupidity points
 

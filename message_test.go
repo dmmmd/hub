@@ -10,28 +10,31 @@ func TestMessageImplementsMessageInterface(t *testing.T) {
 }
 
 func TestRelayCommandReturnsRelay(t *testing.T) {
-	m := newRelayMessage(9001, []int64{100500, 42}, "irrelevant")
+	body := "testBody"
+	m := newRelayMessage(9001, []int64{100500, 42}, &body)
 
 	assert.Equal(t, MessageTypeRelay, m.Command())
 }
 
 func TestRelaySenderReturnsSender(t *testing.T) {
 	sender := int64(42)
-	m := newRelayMessage(sender, []int64{100500, 42}, "irrelevant")
+	body := "testBody"
+	m := newRelayMessage(sender, []int64{100500, 42}, &body)
 
 	assert.Equal(t, sender, m.Sender())
 }
 
 func TestRelayBodyReturnsBody(t *testing.T) {
 	body := "testBody\nline2 foobar"
-	m := newRelayMessage(9001, []int64{100500, 42}, body)
+	m := newRelayMessage(9001, []int64{100500, 42}, &body)
 
-	assert.Equal(t, body, m.Body())
+	assert.Equal(t, body, *m.Body())
 }
 
 func TestRelayReceiversReturnsReceivers(t *testing.T) {
+	body := "testBody"
 	receivers := []int64{100500, 42}
-	m := newRelayMessage(9001, receivers, "irrelevant")
+	m := newRelayMessage(9001, receivers, &body)
 	r := m.Receivers()
 
 	assert.Len(t, r, 2)

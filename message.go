@@ -8,17 +8,17 @@ type MessageInterface interface {
 	Command() string
 	Sender() int64
 	Receivers() []int64
-	Body() string
+	Body() *string
 }
 
 type Message struct {
 	command   string
 	sender    int64
 	receivers []int64
-	body      string
+	body      *string
 }
 
-func newRelayMessage(sender int64, receivers []int64, body string) *Message {
+func newRelayMessage(sender int64, receivers []int64, body *string) *Message {
 	return &Message{command: MessageTypeRelay, body: body, sender: sender, receivers: receivers}
 }
 
@@ -42,7 +42,6 @@ func (m *Message) Receivers() []int64 {
 	return m.receivers
 }
 
-func (m *Message) Body() string {
-	//return "42"
+func (m *Message) Body() *string {
 	return m.body
 }

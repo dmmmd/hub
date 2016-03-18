@@ -8,15 +8,15 @@ type ClientError struct {
 	problem string
 }
 
-func NewClientInvalidCommandError() *ClientError {
+func newClientInvalidCommandError() *ClientError {
 	return &ClientError{problem: ClientErrorInvalidMessage}
 }
 
-func NewClientConnectionError() *ClientError {
+func newClientConnectionError() *ClientError {
 	return &ClientError{problem: ClientErrorConnection}
 }
 
-func NewClientInvalidReceiversError() *ClientError {
+func newClientInvalidReceiversError() *ClientError {
 	return &ClientError{problem: ClientErrorInvalidReceivers}
 }
 

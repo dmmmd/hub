@@ -145,21 +145,21 @@ func TestDispatchSendsRelayMessageToReceivers(t *testing.T) {
 	d.Subscribe(client2)
 	d.Subscribe(client3)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3, clientId1}, body1))
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2}, body2))
-	d.Dispatch(newRelayMessage(clientId3, []int64{clientId2, clientId1}, body3))
+	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3, clientId1}, &body1))
+	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2}, &body2))
+	d.Dispatch(newRelayMessage(clientId3, []int64{clientId2, clientId1}, &body3))
 
 	assert.Len(client1.received, 2)
-	assert.Equal(body1+"\n\n", client1.received[0])
-	assert.Equal(body3+"\n\n", client1.received[1])
+	assert.Equal(body1, client1.received[0])
+	assert.Equal(body3, client1.received[1])
 
 	assert.Len(client2.received, 3)
-	assert.Equal(body1+"\n\n", client2.received[0])
-	assert.Equal(body2+"\n\n", client2.received[1])
-	assert.Equal(body3+"\n\n", client2.received[2])
+	assert.Equal(body1, client2.received[0])
+	assert.Equal(body2, client2.received[1])
+	assert.Equal(body3, client2.received[2])
 
 	assert.Len(client3.received, 1)
-	assert.Equal(body1+"\n\n", client3.received[0])
+	assert.Equal(body1, client3.received[0])
 }
 
 func TestDispatchIgnoresNonExistingReceivers(t *testing.T) {
@@ -180,15 +180,15 @@ func TestDispatchIgnoresNonExistingReceivers(t *testing.T) {
 	d.Subscribe(client2)
 	d.Subscribe(client3)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, 987654321, clientId3}, body1))
+	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, 987654321, clientId3}, &body1))
 
 	assert.Len(client1.received, 0)
 
 	assert.Len(client2.received, 1)
-	assert.Equal(body1+"\n\n", client2.received[0])
+	assert.Equal(body1, client2.received[0])
 
 	assert.Len(client3.received, 1)
-	assert.Equal(body1+"\n\n", client3.received[0])
+	assert.Equal(body1, client3.received[0])
 }
 
 func TestDispatchNotSendingToUnsubscribedClients(t *testing.T) {
@@ -211,13 +211,13 @@ func TestDispatchNotSendingToUnsubscribedClients(t *testing.T) {
 
 	d.Unsubscribe(client2)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3}, body1))
+	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3}, &body1))
 
 	assert.Len(client1.received, 0)
 	assert.Len(client2.received, 0)
 
 	assert.Len(client3.received, 1)
-	assert.Equal(body1+"\n\n", client3.received[0])
+	assert.Equal(body1, client3.received[0])
 }
 
 /*
@@ -250,12 +250,10 @@ func (c *MockedClient) Id() int64 {
 	return c.id
 }
 
-func (c *MockedClient) Send(message string) {
-	c.received = append(c.received, message)
+func (c *MockedClient) Send(message *string) {
+	c.received = append(c.received, *message)
 }
 
 func (c *MockedClient) NextMessage() (MessageInterface, *ClientError) {
-	return nil, nil
-	//args := c.Called()
-	//return args.Get(0), args.Get(1)
+	return nil, nil // Irrelevant for this test
 }
