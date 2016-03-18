@@ -12,39 +12,20 @@ func main() {
 	listener := createListener()
 	defer listener.Close()
 
-	registry := new(Registry)
+	sequence := newIdSequence()
 	dispatcher := newDispather()
-	acceptConnections(registry, dispatcher, listener)
+	server := newServer(sequence, dispatcher)
+	acceptConnections(server, listener)
 }
 
-func acceptConnections(registry *Registry, dispatcher *Dispatcher, listener *net.TCPListener) {
+func acceptConnections(server *Server, listener *net.TCPListener) {
 	for {
 		connection, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Printf("Can't accept connection: %s", err.Error())
 		} else {
 			conn := newConnection(connection)
-			go serveConnection(registry, dispatcher, conn)
-		}
-	}
-}
-
-func serveConnection(registry *Registry, dispatcher *Dispatcher, connection ConnectionInterface) {
-	client := newClient(registry.NextId(), connection)
-	dispatcher.Subscribe(client)
-
-	defer connection.Close()
-
-	for {
-		message, err := client.NextMessage()
-
-		switch {
-		case err == nil:
-			dispatcher.Dispatch(message)
-		case err.ConnectionError():
-			dispatcher.Unsubscribe(client)
-			return
-			// case err.InvalidMessage(): // Just continue
+			go server.Serve(conn)
 		}
 	}
 }
