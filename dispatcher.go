@@ -56,6 +56,12 @@ func (d *Dispatcher) Subscribe(c *Client) {
 	d.unlockClients()
 }
 
+func (d *Dispatcher) Unsubscribe(c *Client) {
+	d.lockClients()
+	delete(d.clients, c.id)
+	d.unlockClients()
+}
+
 func (d *Dispatcher) sendBody(receiver int64, body string) {
 	client := d.client(receiver)
 

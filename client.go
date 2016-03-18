@@ -24,35 +24,70 @@ func (c *Client) Send(message string) {
 	}()
 }
 
-func (c *Client) NextMessage() *Message {
-	cmd := c.readLine()
+func (c *Client) NextMessage() (*Message, *ClientError) {
+	cmd, err := c.readLine()
+	if err != nil {
+		return nil, err
+	}
 
 	switch cmd {
 	case MessageTypeIdentity:
-		return NewIdentityMessage(c.id)
+		return NewIdentityMessage(c.id), nil
 	case MessageTypeList:
-		return NewListMessage(c.id)
+		return NewListMessage(c.id), nil
 	}
 
 	if cmd != MessageTypeRelay {
-		// todo
+		return nil, NewClientInvalidMessageError()
 	}
 
-	receivers := parseReceivers(c.readLine())
-	body := c.readLine()
-	return NewRelayMessage(c.id, []int64(receivers), body)
+	// Receivers
+	line, err := c.readLine()
+	if err != nil {
+		return nil, err
+	}
+	receivers := parseReceivers(line)
+
+	// Body
+	body, err := c.readBody()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewRelayMessage(c.id, []int64(receivers), body), nil
 }
 
-func (c *Client) readLine() string {
+func (c *Client) readBody() (string, *ClientError) {
+	var body string
+	emptyLinesAmount := 0
+
+	for emptyLinesAmount < 2 {
+		line, err := c.readLine()
+		if err != nil {
+			return "", err
+		}
+
+		body += line + "\n"
+		if "" == line {
+			emptyLinesAmount++
+		} else {
+			emptyLinesAmount = 0
+		}
+	}
+
+	return strings.TrimSpace(body), nil
+}
+
+func (c *Client) readLine() (string, *ClientError) {
 	bytes := make([]byte, 1048576)
-	len, _ := c.connection.Read(bytes)
+	len, err := c.connection.Read(bytes)
 
-	//if err != nil {
-	//	connection.Close()
-	//	break
-	//}
+	if err != nil {
+		c.connection.Close()
+		return "", NewClientConnectionLostError()
+	}
 
-	return strings.TrimSpace(string(bytes[:len]))
+	return strings.TrimSpace(string(bytes[:len])), nil
 }
 
 func parseReceivers(line string) []int64 {

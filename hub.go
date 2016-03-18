@@ -31,8 +31,15 @@ func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net
 	dispatcher.Subscribe(client)
 
 	for {
-		message := client.NextMessage()
-		dispatcher.Dispatch(message)
+		message, err := client.NextMessage()
+
+		switch {
+		case err == nil:
+			dispatcher.Dispatch(message)
+		case err.ConnectionLost():
+			dispatcher.Unsubscribe(client)
+			// case err.InvalidMessage(): // Just continue
+		}
 	}
 
 	connection.Close()
