@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestRelayCommandReturnsRelay(t *testing.T) {
-	m := NewRelayMessage([]int64{100500, 42}, "irrelevant")
+	m := NewRelayMessage(9001, []int64{100500, 42}, "irrelevant")
 	if MessageTypeRelay != m.Command() {
 		t.Fail()
 	}
@@ -11,7 +11,7 @@ func TestRelayCommandReturnsRelay(t *testing.T) {
 
 func TestRelayBodyReturnsBody(t *testing.T) {
 	body := "testBody\nline2 foobar"
-	m := NewRelayMessage([]int64{100500, 42}, body)
+	m := NewRelayMessage(9001, []int64{100500, 42}, body)
 	if body != m.Body() {
 		t.Fail()
 	}
@@ -19,7 +19,7 @@ func TestRelayBodyReturnsBody(t *testing.T) {
 
 func TestRelayReceiversReturnsReceivers(t *testing.T) {
 	receivers := []int64{100500, 42}
-	m := NewRelayMessage(receivers, "irrelevant")
+	m := NewRelayMessage(9001, receivers, "irrelevant")
 	r := m.Receivers()
 
 	switch {
@@ -33,21 +33,21 @@ func TestRelayReceiversReturnsReceivers(t *testing.T) {
 }
 
 func TestIdentityCommandReturnsIdentity(t *testing.T) {
-	m := NewIdentityMessage()
+	m := NewIdentityMessage(42)
 	if MessageTypeIdentity != m.Command() {
 		t.Fail()
 	}
 }
 
 func TestIdentityBodyReturnsIsEmpty(t *testing.T) {
-	m := NewIdentityMessage()
+	m := NewIdentityMessage(42)
 	if "" != m.Body() {
 		t.Fail()
 	}
 }
 
 func TestIdentityReceiversAreEmpty(t *testing.T) {
-	m := NewIdentityMessage()
+	m := NewIdentityMessage(42)
 	r := m.Receivers()
 
 	if 0 != len(r) {
@@ -56,21 +56,21 @@ func TestIdentityReceiversAreEmpty(t *testing.T) {
 }
 
 func TestListCommandReturnsList(t *testing.T) {
-	m := NewListMessage()
+	m := NewListMessage(42)
 	if MessageTypeList != m.Command() {
 		t.Fail()
 	}
 }
 
 func TestListBodyReturnsIsEmpty(t *testing.T) {
-	m := NewListMessage()
+	m := NewListMessage(42)
 	if "" != m.Body() {
 		t.Fail()
 	}
 }
 
 func TestListReceiversAreEmpty(t *testing.T) {
-	m := NewListMessage()
+	m := NewListMessage(42)
 	r := m.Receivers()
 
 	if 0 != len(r) {
