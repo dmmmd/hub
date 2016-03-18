@@ -14,21 +14,24 @@ func main() {
 
 	registry := new(Registry)
 	dispatcher := NewDispather()
+	acceptConnections(registry, dispatcher, listener)
+}
 
+func acceptConnections(registry *Registry, dispatcher *Dispatcher, listener *net.TCPListener) {
 	for {
 		connection, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Printf("Can't accept connection: %s", err.Error())
-			os.Exit(1)
+		} else {
+			go serveConnection(registry, dispatcher, connection)
 		}
-
-		go serveConnection(registry, dispatcher, connection)
 	}
 }
 
 func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net.TCPConn) {
 	client := NewClient(registry.NextId(), connection)
 	dispatcher.Subscribe(client)
+	defer connection.Close()
 
 	for {
 		message, err := client.NextMessage()
@@ -41,8 +44,6 @@ func serveConnection(registry *Registry, dispatcher *Dispatcher, connection *net
 			// case err.InvalidMessage(): // Just continue
 		}
 	}
-
-	connection.Close()
 }
 
 func createListener() *net.TCPListener {

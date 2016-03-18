@@ -35,11 +35,14 @@ func (c *Client) Send(message string) {
 }
 
 func (c *Client) NextMessage() (MessageInterface, *ClientError) {
-	cmd, err := c.readLine()
+	message, err := c.readMessage()
 	if err != nil {
 		return nil, err
 	}
 
+	lines := strings.Split(message, "\n")
+
+	cmd := lines[0]
 	switch cmd {
 	case MessageTypeIdentity:
 		return NewIdentityMessage(c.id), nil
@@ -51,24 +54,23 @@ func (c *Client) NextMessage() (MessageInterface, *ClientError) {
 		return nil, NewClientInvalidMessageError()
 	}
 
+	if len(lines) < 3 {
+		return nil, NewClientInvalidMessageError()
+	}
+
 	// Receivers
-	line, err := c.readLine()
+	receivers, err := parseReceivers(lines[1])
 	if err != nil {
 		return nil, err
 	}
-	receivers := parseReceivers(line)
 
 	// Body
-	body, err := c.readBody()
-	if err != nil {
-		return nil, err
-	}
-
+	body := strings.Join(lines[2:], "\n")
 	return NewRelayMessage(c.id, []int64(receivers), body), nil
 }
 
-func (c *Client) readBody() (string, *ClientError) {
-	var body string
+func (c *Client) readMessage() (string, *ClientError) {
+	var message string
 	emptyLinesAmount := 0
 
 	for emptyLinesAmount < 2 {
@@ -77,7 +79,7 @@ func (c *Client) readBody() (string, *ClientError) {
 			return "", err
 		}
 
-		body += line + "\n"
+		message += line + "\n"
 		if "" == line {
 			emptyLinesAmount++
 		} else {
@@ -85,7 +87,7 @@ func (c *Client) readBody() (string, *ClientError) {
 		}
 	}
 
-	return strings.TrimSpace(body), nil
+	return strings.TrimSpace(message), nil
 }
 
 func (c *Client) readLine() (string, *ClientError) {
@@ -100,12 +102,16 @@ func (c *Client) readLine() (string, *ClientError) {
 	return strings.TrimSpace(string(bytes[:len])), nil
 }
 
-func parseReceivers(line string) []int64 {
+func parseReceivers(line string) ([]int64, *ClientError) {
 	var receivers []int64
 	for _, word := range strings.Split(line, ",") {
 		word = strings.TrimSpace(word)
-		id, _ := strconv.ParseInt(word, 10, 64)
+		id, err := strconv.ParseInt(word, 10, 64)
+		if err != nil {
+			return make([]int64, 0), NewClientInvalidReceivers()
+		}
+
 		receivers = append(receivers, id)
 	}
-	return receivers
+	return receivers, nil
 }
