@@ -24,8 +24,6 @@ func TestNextMessageReturnsIdentityMessage(t *testing.T) {
 	conn := new(MockedConnection)
 
 	conn.AddExpectedLine(MessageTypeIdentity)
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("")
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -37,8 +35,6 @@ func TestNextMessageReturnsListMessage(t *testing.T) {
 	conn := new(MockedConnection)
 
 	conn.AddExpectedLine(MessageTypeList)
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("")
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -47,16 +43,18 @@ func TestNextMessageReturnsListMessage(t *testing.T) {
 }
 
 func TestNextMessageReturnsRelayMessage(t *testing.T) {
+	boundary := "testBoundary"
+
 	conn := new(MockedConnection)
 
 	conn.AddExpectedLine(MessageTypeRelay)
 	conn.AddExpectedLine("100500,42,56")
+	conn.AddExpectedLine(BoundaryPrefix + boundary)
 	conn.AddExpectedLine("foobar 1")
 	conn.AddExpectedLine("foobar 2")
 	conn.AddExpectedLine("")
 	conn.AddExpectedLine("foobar 3")
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("")
+	conn.AddExpectedLine(boundary)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -64,7 +62,7 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(MessageTypeRelay, message.Command())
-	assert.Equal("foobar 1\nfoobar 2\n\nfoobar 3", message.Body())
+	assert.Equal("foobar 1\nfoobar 2\n\nfoobar 3\n", message.Body())
 
 	receivers := message.Receivers()
 	assert.Len(receivers, 3)
@@ -78,9 +76,9 @@ func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {
 
 	conn.AddExpectedLine("testInvalidCommand")
 	conn.AddExpectedLine("100500,42,56")
+	conn.AddExpectedLine(BoundaryPrefix + "TEST")
 	conn.AddExpectedLine("foobar")
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("")
+	conn.AddExpectedLine("TEST")
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -98,9 +96,9 @@ func TestNextMessageReturnsErrorOnInvalidReceivers(t *testing.T) {
 
 	conn.AddExpectedLine(MessageTypeRelay)
 	conn.AddExpectedLine("100500,4foo2,56")
+	conn.AddExpectedLine(BoundaryPrefix + "TEST")
 	conn.AddExpectedLine("foobar")
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("")
+	conn.AddExpectedLine("TEST")
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
