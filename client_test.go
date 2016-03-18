@@ -1,11 +1,11 @@
 package main
 
 import (
-	"testing"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"testing"
 	"time"
-	"errors"
 )
 
 func TestClientImplementsClientInterface(t *testing.T) {
@@ -151,7 +151,7 @@ func TestSendWritesToConnection(t *testing.T) {
 
 type MockedConnection struct {
 	mock.Mock
-	lines []string
+	lines   []string
 	written []string
 }
 
@@ -176,5 +176,5 @@ func (c *MockedConnection) Close() {
 }
 
 func (c *MockedConnection) AddExpectedLine(line string) {
-	c.lines = append(c.lines, line + "\n")
+	c.lines = append(c.lines, line+"\n")
 }
