@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"flag"
 )
-
-const serverPort = 8888
 
 func main() {
 	listener := createListener()
@@ -34,7 +33,7 @@ func acceptConnections(server *Server, listener *net.TCPListener) {
 
 func createListener() *net.TCPListener {
 	ip := net.IPv4(127, 0, 0, 1)
-	addr := &net.TCPAddr{Port: serverPort, IP: ip}
+	addr := &net.TCPAddr{Port: getPort(), IP: ip}
 	listener, err := net.ListenTCP("tcp", addr)
 
 	if err != nil {
@@ -43,4 +42,11 @@ func createListener() *net.TCPListener {
 	}
 
 	return listener
+}
+
+func getPort() int {
+	port := flag.Int("port", 8888, "Port to listen")
+	flag.Parse()
+
+	return *port
 }
