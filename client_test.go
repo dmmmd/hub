@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestClientImplementsClientInterface(t *testing.T) {
@@ -123,11 +122,24 @@ func TestSendWritesToConnection(t *testing.T) {
 	c.Send(&messages[0])
 	c.Send(&messages[1])
 
-	time.Sleep(time.Millisecond) // For stupidity points
+	done := make(chan bool, 1)
 
+	go func() {
+		written := conn.getWritten()
+		for len(written) != 2 {
+			written = conn.getWritten()
+		}
+
+		done <- true
+
+	}()
+
+	<-done
 	conn.AssertNumberOfCalls(t, "Write", 2)
 	conn.AssertExpectations(t)
 	assert.Len(t, conn.getWritten(), 2)
+	//time.Sleep(time.Millisecond) // For stupidity points
+
 }
 
 /*
