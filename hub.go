@@ -8,32 +8,43 @@ import (
 )
 
 func main() {
-	listener := createListener()
-	defer listener.Close()
+	port := flag.Int("port", 8888, "Port to listen")
+	flag.Parse()
 
-	sequence := newIdSequence()
-	clientFactory := newClientFactory(sequence)
-	dispatcher := newDispather()
-	server := newServer(clientFactory, dispatcher)
-
-	acceptConnections(server, listener)
+	NewHub(*port)
 }
 
-func acceptConnections(server *Server, listener *net.TCPListener) {
+type Hub struct {
+	port int
+	server *Server
+}
+
+func NewHub(port int) *Hub {
+	server := newServer(newClientFactory(newIdSequence()), newDispather())
+	hub := &Hub{port: port, server: server}
+	hub.acceptConnections()
+
+	return hub
+}
+
+func (h *Hub) acceptConnections() {
+	listener := h.createListener()
+	defer listener.Close()
+
 	for {
 		connection, err := listener.AcceptTCP()
 		if err != nil {
 			fmt.Printf("Can't accept connection: %s", err.Error())
 		} else {
 			conn := newConnection(connection)
-			go server.Serve(conn)
+			go h.server.Serve(conn)
 		}
 	}
 }
 
-func createListener() *net.TCPListener {
+func (h *Hub) createListener() *net.TCPListener {
 	ip := net.IPv4(127, 0, 0, 1)
-	addr := &net.TCPAddr{Port: getPort(), IP: ip}
+	addr := &net.TCPAddr{Port: h.port, IP: ip}
 	listener, err := net.ListenTCP("tcp", addr)
 
 	if err != nil {
@@ -42,11 +53,4 @@ func createListener() *net.TCPListener {
 	}
 
 	return listener
-}
-
-func getPort() int {
-	port := flag.Int("port", 8888, "Port to listen")
-	flag.Parse()
-
-	return *port
 }
