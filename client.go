@@ -13,6 +13,22 @@ type ClientInterface interface {
 	NextMessage() (MessageInterface, *ClientError)
 }
 
+type ClientFactoryInterface interface {
+	Create(connection ConnectionInterface) ClientInterface
+}
+
+type ClientFactory struct {
+	sequence IdSequenceInterface
+}
+
+func newClientFactory(s IdSequenceInterface) *ClientFactory {
+	return &ClientFactory{sequence: s}
+}
+
+func (f *ClientFactory) Create(connection ConnectionInterface) ClientInterface {
+	return newClient(f.sequence.NextId(), connection)
+}
+
 type Client struct {
 	id         uint64
 	outbox     chan *string

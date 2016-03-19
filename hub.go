@@ -13,8 +13,10 @@ func main() {
 	defer listener.Close()
 
 	sequence := newIdSequence()
+	clientFactory := newClientFactory(sequence)
 	dispatcher := newDispather()
-	server := newServer(sequence, dispatcher)
+	server := newServer(clientFactory, dispatcher)
+
 	acceptConnections(server, listener)
 }
 

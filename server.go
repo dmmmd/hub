@@ -1,12 +1,12 @@
 package main
 
 type Server struct {
-	idSequence IdSequenceInterface
-	dispatcher DispatcherInterface
+	clientFactory ClientFactoryInterface
+	dispatcher    DispatcherInterface
 }
 
-func newServer(s IdSequenceInterface, d DispatcherInterface) *Server {
-	return &Server{idSequence: s, dispatcher: d}
+func newServer(f ClientFactoryInterface, d DispatcherInterface) *Server {
+	return &Server{clientFactory: f, dispatcher: d}
 }
 
 func (s *Server) Serve(connection ConnectionInterface) {
@@ -30,10 +30,6 @@ func (s *Server) Serve(connection ConnectionInterface) {
 	}
 }
 
-func (s *Server) getNextId() uint64 {
-	return s.idSequence.NextId()
-}
-
 func (s *Server) createClient(connection ConnectionInterface) ClientInterface {
-	return newClient(s.getNextId(), connection)
+	return s.clientFactory.Create(connection)
 }
