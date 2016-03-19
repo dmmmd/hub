@@ -32,21 +32,18 @@ func TestListsAndIdentities(t *testing.T) {
 
 	go func() {
 		r := <-output1
-		//fmt.Printf("RESULT: c1: '%s' -----c1-----\n", r)
 		assert.Contains(r, "Your ID is 1")
 		finished <- 1
 	}()
 
 	go func() {
 		r := <-output2
-		//fmt.Printf("RESULT: c2: '%s' -----c2-----\n", r)
 		assert.Contains(r, "Client IDs are")
 		assert.Contains(r, "1")
 		assert.NotContains(r, "2")
 		assert.Contains(r, "3")
 
 		r = <-output2
-		//fmt.Printf("RESULT: c2: '%s' -----c2-----\n", r)
 		assert.Contains(r, "Client IDs are")
 		assert.Contains(r, "1")
 		assert.NotContains(r, "2")
@@ -57,18 +54,15 @@ func TestListsAndIdentities(t *testing.T) {
 
 	go func() {
 		r := <-output3
-		//fmt.Printf("RESULT: c3: '%s' -----c3-----\n", r)
 		assert.Contains(r, "Client IDs are")
 		assert.Contains(r, "1")
 		assert.Contains(r, "2")
 		assert.NotContains(r, "3")
 
 		r = <-output3
-		//fmt.Printf("RESULT: c3: '%s' -----c3-----\n", r)
 		assert.Contains(r, "Your ID is 3")
 
 		r = <-output3
-		//fmt.Printf("RESULT: c3: '%s' -----c3-----\n", r)
 		assert.Contains(r, "Your ID is 3")
 
 		finished <- 3
@@ -158,13 +152,11 @@ func getHelperClient(port int) (chan string, chan string) {
 		for {
 			// Sending
 			m := <-input
-			//fmt.Printf("Sending '%s'\n", m + "\n")
 			fmt.Fprint(c, m+"\n")
 
 			// Reading response
 			//fmt.Printf("About to read\n")
 			len, _ = reader.Read(bytes)
-			//fmt.Printf("Read %d '%s'\n", len, string(bytes[:len]))
 			output <- string(bytes[:len])
 		}
 	}()

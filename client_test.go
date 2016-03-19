@@ -138,8 +138,6 @@ func TestSendWritesToConnection(t *testing.T) {
 	conn.AssertNumberOfCalls(t, "Write", 2)
 	conn.AssertExpectations(t)
 	assert.Len(t, conn.getWritten(), 2)
-	//time.Sleep(time.Millisecond) // For stupidity points
-
 }
 
 /*
