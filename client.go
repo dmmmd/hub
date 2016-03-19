@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-const BoundaryPrefix string = "Boundary: "
-
 type ClientInterface interface {
 	Id() uint64
 	Send(message *string)
@@ -52,93 +50,38 @@ func (c *Client) Send(message *string) {
 }
 
 func (c *Client) NextMessage() (MessageInterface, *ClientError) {
-	cmd, err := c.readCommand()
+	command, err := c.readCommand()
 	if err != nil {
 		return nil, err
 	}
 
-	switch cmd {
+	cmd := strings.SplitN(command, "\n", 3)
+
+	switch cmd[0] {
 	case MessageTypeIdentity:
 		return newIdentityMessage(c.id), nil
 	case MessageTypeList:
 		return newListMessage(c.id), nil
 	case MessageTypeRelay:
-		return c.buildRelayMessage()
+		if len(cmd) != 3 {
+			return nil, newClientInvalidCommandError()
+		}
+		return c.buildRelayMessage(cmd[1], &cmd[2])
 	}
 
 	return nil, newClientInvalidCommandError()
 }
 
-func (c *Client) buildRelayMessage() (MessageInterface, *ClientError) {
-	// Receivers
-	receivers, err := c.readReceivers()
+func (c *Client) buildRelayMessage(receivers string, body *string) (MessageInterface, *ClientError) {
+	receiverIds, err := c.parseReceivers(receivers)
 	if err != nil {
 		return nil, err
 	}
 
-	// Body
-	body, err := c.readBody()
-	if err != nil {
-		return nil, err
-	}
-
-	return newRelayMessage(c.id, receivers, body), nil
+	return newRelayMessage(c.id, receiverIds, body), nil
 }
 
 func (c *Client) readCommand() (string, *ClientError) {
-	line, err := c.readLine()
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(line), nil
-}
-
-func (c *Client) readReceivers() ([]uint64, *ClientError) {
-	line, err := c.readLine()
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	return c.parseReceivers(line)
-}
-
-func (c *Client) readBody() (*string, *ClientError) {
-	var message string
-
-	boundary, err := c.getBoundary()
-	if err != nil {
-		return new(string), err
-	}
-
-	for {
-		line, err := c.readLine()
-		if err != nil {
-			return new(string), err
-		}
-
-		if boundary == line {
-			return &message, nil
-		}
-
-		message += line
-	}
-}
-
-func (c *Client) getBoundary() (string, *ClientError) {
-	line, err := c.readLine()
-	if err != nil {
-		return "", err
-	}
-
-	if strings.HasPrefix(line, BoundaryPrefix) {
-		return line[len(BoundaryPrefix):], nil
-	} else {
-		return "", newClientInvalidCommandError()
-	}
-}
-
-func (c *Client) readLine() (string, *ClientError) {
 	line, err := c.connection.Read()
 
 	if err != nil {

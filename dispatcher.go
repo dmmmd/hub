@@ -30,7 +30,6 @@ func (d *Dispatcher) Dispatch(message MessageInterface) {
 	case MessageTypeList:
 		d.list(message.Sender())
 	}
-
 }
 
 func (d *Dispatcher) identify(sender uint64) {
@@ -61,14 +60,16 @@ func (d *Dispatcher) relay(message MessageInterface) {
 
 func (d *Dispatcher) Subscribe(c ClientInterface) {
 	d.lockClients()
+	defer d.unlockClients()
+
 	d.clients[c.Id()] = c
-	d.unlockClients()
 }
 
 func (d *Dispatcher) Unsubscribe(c ClientInterface) {
 	d.lockClients()
+	defer d.unlockClients()
+
 	delete(d.clients, c.Id())
-	d.unlockClients()
 }
 
 func (d *Dispatcher) sendBody(receiver uint64, body *string) {
@@ -81,9 +82,9 @@ func (d *Dispatcher) sendBody(receiver uint64, body *string) {
 
 func (d *Dispatcher) client(id uint64) ClientInterface {
 	d.lockClients()
-	client := d.clients[id]
-	d.unlockClients()
-	return client
+	defer d.unlockClients()
+
+	return d.clients[id]
 }
 
 func (d *Dispatcher) lockClients() {

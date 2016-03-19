@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"sync"
 	"testing"
 	"time"
 )
@@ -23,7 +25,7 @@ func TestIdReturnsId(t *testing.T) {
 func TestNextMessageReturnsIdentityMessage(t *testing.T) {
 	conn := new(ClientMockedConnection)
 
-	conn.addExpectedLine(MessageTypeIdentity)
+	conn.setExpectedCommand(MessageTypeIdentity)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -34,7 +36,7 @@ func TestNextMessageReturnsIdentityMessage(t *testing.T) {
 func TestNextMessageReturnsListMessage(t *testing.T) {
 	conn := new(ClientMockedConnection)
 
-	conn.addExpectedLine(MessageTypeList)
+	conn.setExpectedCommand(MessageTypeList)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -43,18 +45,11 @@ func TestNextMessageReturnsListMessage(t *testing.T) {
 }
 
 func TestNextMessageReturnsRelayMessage(t *testing.T) {
-	boundary := "testBoundary"
+	body := "foobar 1\nfoobar 2\n\nfoobar 3"
 
 	conn := new(ClientMockedConnection)
 
-	conn.addExpectedLine(MessageTypeRelay)
-	conn.addExpectedLine("100500,42,56")
-	conn.addExpectedLine(BoundaryPrefix + boundary)
-	conn.addExpectedLine("foobar 1")
-	conn.addExpectedLine("foobar 2")
-	conn.addExpectedLine("")
-	conn.addExpectedLine("foobar 3")
-	conn.addExpectedLine(boundary)
+	conn.setExpectedCommand(fmt.Sprintf("%s\n100500,42,56\n%s", MessageTypeRelay, body))
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -62,7 +57,7 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(MessageTypeRelay, message.Command())
-	assert.Equal("foobar 1\nfoobar 2\n\nfoobar 3\n", *message.Body())
+	assert.Equal(body, *message.Body())
 
 	receivers := message.Receivers()
 	assert.Len(receivers, 3)
@@ -74,11 +69,7 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {
 	conn := new(ClientMockedConnection)
 
-	conn.addExpectedLine("testInvalidCommand")
-	conn.addExpectedLine("100500,42,56")
-	conn.addExpectedLine(BoundaryPrefix + "TEST")
-	conn.addExpectedLine("foobar")
-	conn.addExpectedLine("TEST")
+	conn.setExpectedCommand("testInvalidCommand\n100500,42,56\nfoobar")
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -94,11 +85,7 @@ func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {
 func TestNextMessageReturnsErrorOnInvalidReceivers(t *testing.T) {
 	conn := new(ClientMockedConnection)
 
-	conn.addExpectedLine(MessageTypeRelay)
-	conn.addExpectedLine("100500,4foo2,56")
-	conn.addExpectedLine(BoundaryPrefix + "TEST")
-	conn.addExpectedLine("foobar")
-	conn.addExpectedLine("TEST")
+	conn.setExpectedCommand(fmt.Sprintf("%s\n100500,4foo2,56\nfoobar", MessageTypeRelay))
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -140,7 +127,7 @@ func TestSendWritesToConnection(t *testing.T) {
 
 	conn.AssertNumberOfCalls(t, "Write", 2)
 	conn.AssertExpectations(t)
-	assert.Len(t, conn.written, 2)
+	assert.Len(t, conn.getWritten(), 2)
 }
 
 /*
@@ -149,21 +136,23 @@ func TestSendWritesToConnection(t *testing.T) {
 
 type ClientMockedConnection struct {
 	mock.Mock
-	lines   []string
+	command string
 	written []string
+	lock    sync.Mutex
 }
 
 func (c *ClientMockedConnection) Write(message string) error {
 	args := c.Called(message)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	c.written = append(c.written, message)
 	return args.Error(0)
 }
 
 func (c *ClientMockedConnection) Read() (string, error) {
-	if len(c.lines) > 0 {
-		line := c.lines[0]
-		c.lines = c.lines[1:]
-		return line, nil
+	if c.command != "" {
+		return c.command, nil
 	}
 
 	return "", errors.New("testConnectionReadError")
@@ -173,6 +162,13 @@ func (c *ClientMockedConnection) Close() {
 	c.Called()
 }
 
-func (c *ClientMockedConnection) addExpectedLine(line string) {
-	c.lines = append(c.lines, line+"\n")
+func (c *ClientMockedConnection) setExpectedCommand(command string) {
+	c.command = command
+}
+
+func (c *ClientMockedConnection) getWritten() []string {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	return c.written
 }
