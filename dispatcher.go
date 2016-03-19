@@ -13,12 +13,12 @@ type DispatcherInterface interface {
 }
 
 type Dispatcher struct {
-	clients      map[int64]ClientInterface
+	clients      map[uint64]ClientInterface
 	clientsMutex sync.Mutex
 }
 
 func newDispather() *Dispatcher {
-	return &Dispatcher{clients: make(map[int64]ClientInterface)}
+	return &Dispatcher{clients: make(map[uint64]ClientInterface)}
 }
 
 func (d *Dispatcher) Dispatch(message MessageInterface) {
@@ -33,12 +33,12 @@ func (d *Dispatcher) Dispatch(message MessageInterface) {
 
 }
 
-func (d *Dispatcher) identify(sender int64) {
+func (d *Dispatcher) identify(sender uint64) {
 	body := fmt.Sprintf("[Server] Your ID is %d\n", sender)
 	d.sendBody(sender, &body)
 }
 
-func (d *Dispatcher) list(sender int64) {
+func (d *Dispatcher) list(sender uint64) {
 	var clientList []string
 
 	d.lockClients()
@@ -71,7 +71,7 @@ func (d *Dispatcher) Unsubscribe(c ClientInterface) {
 	d.unlockClients()
 }
 
-func (d *Dispatcher) sendBody(receiver int64, body *string) {
+func (d *Dispatcher) sendBody(receiver uint64, body *string) {
 	client := d.client(receiver)
 
 	if client != nil {
@@ -79,7 +79,7 @@ func (d *Dispatcher) sendBody(receiver int64, body *string) {
 	}
 }
 
-func (d *Dispatcher) client(id int64) ClientInterface {
+func (d *Dispatcher) client(id uint64) ClientInterface {
 	d.lockClients()
 	client := d.clients[id]
 	d.unlockClients()

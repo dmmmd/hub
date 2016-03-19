@@ -30,7 +30,7 @@ func (s *Server) Serve(connection ConnectionInterface) {
 	}
 }
 
-func (s *Server) getNextId() int64 {
+func (s *Server) getNextId() uint64 {
 	return s.idSequence.NextId()
 }
 

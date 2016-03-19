@@ -5,25 +5,25 @@ import (
 	"strings"
 )
 
-const BoundaryPrefix string = "Boundary < "
+const BoundaryPrefix string = "Boundary: "
 
 type ClientInterface interface {
-	Id() int64
+	Id() uint64
 	Send(message *string)
 	NextMessage() (MessageInterface, *ClientError)
 }
 
 type Client struct {
-	id         int64
+	id         uint64
 	outbox     chan *string
 	connection ConnectionInterface
 }
 
-func newClient(id int64, connection ConnectionInterface) *Client {
+func newClient(id uint64, connection ConnectionInterface) *Client {
 	return &Client{id: id, connection: connection, outbox: make(chan *string, 255)}
 }
 
-func (c *Client) Id() int64 {
+func (c *Client) Id() uint64 {
 	return c.id
 }
 
@@ -78,10 +78,10 @@ func (c *Client) readCommand() (string, *ClientError) {
 	return strings.TrimSpace(line), nil
 }
 
-func (c *Client) readReceivers() ([]int64, *ClientError) {
+func (c *Client) readReceivers() ([]uint64, *ClientError) {
 	line, err := c.readLine()
 	if err != nil {
-		return []int64{}, err
+		return []uint64{}, err
 	}
 
 	return c.parseReceivers(line)
@@ -132,13 +132,13 @@ func (c *Client) readLine() (string, *ClientError) {
 	return line, nil
 }
 
-func (c *Client) parseReceivers(line string) ([]int64, *ClientError) {
-	var receivers []int64
+func (c *Client) parseReceivers(line string) ([]uint64, *ClientError) {
+	var receivers []uint64
 	for _, word := range strings.Split(line, ",") {
 		word = strings.TrimSpace(word)
-		id, err := strconv.ParseInt(word, 10, 64)
+		id, err := strconv.ParseUint(word, 10, 64)
 		if err != nil {
-			return make([]int64, 0), newClientInvalidReceiversError()
+			return make([]uint64, 0), newClientInvalidReceiversError()
 		}
 
 		receivers = append(receivers, id)

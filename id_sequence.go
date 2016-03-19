@@ -1,7 +1,7 @@
 package main
 
 type IdSequenceInterface interface {
-	NextId() int64
+	NextId() uint64
 }
 
 func newIdSequence() *IdSequence {
@@ -9,10 +9,10 @@ func newIdSequence() *IdSequence {
 }
 
 type IdSequence struct {
-	nextId int64
+	nextId uint64
 }
 
-func (r *IdSequence) NextId() int64 {
+func (r *IdSequence) NextId() uint64 {
 	r.nextId++
 	return r.nextId
 }

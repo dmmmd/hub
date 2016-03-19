@@ -13,7 +13,7 @@ func TestClientImplementsClientInterface(t *testing.T) {
 }
 
 func TestIdReturnsId(t *testing.T) {
-	id := int64(42)
+	id := uint64(42)
 	conn := new(MockedConnection)
 
 	c := newClient(id, conn)
@@ -66,9 +66,9 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 
 	receivers := message.Receivers()
 	assert.Len(receivers, 3)
-	assert.Contains(receivers, int64(42))
-	assert.Contains(receivers, int64(56))
-	assert.Contains(receivers, int64(100500))
+	assert.Contains(receivers, uint64(42))
+	assert.Contains(receivers, uint64(56))
+	assert.Contains(receivers, uint64(100500))
 }
 
 func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {

@@ -12,7 +12,7 @@ func TestDispatcherImplementsDispatcherInterface(t *testing.T) {
 }
 
 func TestDispatchRespondsWithIdentity(t *testing.T) {
-	clientId := int64(42)
+	clientId := uint64(42)
 	client := newMockedClient(clientId)
 
 	d := newDispather()
@@ -25,7 +25,7 @@ func TestDispatchRespondsWithIdentity(t *testing.T) {
 }
 
 func TestDispatchNotSendingIdentityToDisconnectedClient(t *testing.T) {
-	clientId := int64(42)
+	clientId := uint64(42)
 	client := newMockedClient(clientId)
 
 	d := newDispather()
@@ -38,9 +38,9 @@ func TestDispatchNotSendingIdentityToDisconnectedClient(t *testing.T) {
 }
 
 func TestDispatchRespondsWithList(t *testing.T) {
-	clientId1 := int64(42)
-	clientId2 := int64(100500)
-	clientId3 := int64(9001)
+	clientId1 := uint64(42)
+	clientId2 := uint64(100500)
+	clientId3 := uint64(9001)
 
 	client1 := newMockedClient(clientId1)
 	client2 := newMockedClient(clientId2)
@@ -89,9 +89,9 @@ func TestDispatchRespondsWithList(t *testing.T) {
 }
 
 func TestDispatchRespondsWithShorterListAfterUnsubscribing(t *testing.T) {
-	clientId1 := int64(42)
-	clientId2 := int64(100500)
-	clientId3 := int64(9001)
+	clientId1 := uint64(42)
+	clientId2 := uint64(100500)
+	clientId3 := uint64(9001)
 
 	client1 := newMockedClient(clientId1)
 	client2 := newMockedClient(clientId2)
@@ -130,9 +130,9 @@ func TestDispatchSendsRelayMessageToReceivers(t *testing.T) {
 	body2 := "test message\nbody 2"
 	body3 := "test message\nbody 3"
 
-	clientId1 := int64(42)
-	clientId2 := int64(100500)
-	clientId3 := int64(9001)
+	clientId1 := uint64(42)
+	clientId2 := uint64(100500)
+	clientId3 := uint64(9001)
 
 	client1 := newMockedClient(clientId1)
 	client2 := newMockedClient(clientId2)
@@ -145,9 +145,9 @@ func TestDispatchSendsRelayMessageToReceivers(t *testing.T) {
 	d.Subscribe(client2)
 	d.Subscribe(client3)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3, clientId1}, &body1))
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2}, &body2))
-	d.Dispatch(newRelayMessage(clientId3, []int64{clientId2, clientId1}, &body3))
+	d.Dispatch(newRelayMessage(clientId1, []uint64{clientId2, clientId3, clientId1}, &body1))
+	d.Dispatch(newRelayMessage(clientId1, []uint64{clientId2}, &body2))
+	d.Dispatch(newRelayMessage(clientId3, []uint64{clientId2, clientId1}, &body3))
 
 	assert.Len(client1.received, 2)
 	assert.Equal(body1, client1.received[0])
@@ -165,9 +165,9 @@ func TestDispatchSendsRelayMessageToReceivers(t *testing.T) {
 func TestDispatchIgnoresNonExistingReceivers(t *testing.T) {
 	body1 := "test message\nbody 1"
 
-	clientId1 := int64(42)
-	clientId2 := int64(100500)
-	clientId3 := int64(9001)
+	clientId1 := uint64(42)
+	clientId2 := uint64(100500)
+	clientId3 := uint64(9001)
 
 	client1 := newMockedClient(clientId1)
 	client2 := newMockedClient(clientId2)
@@ -180,7 +180,7 @@ func TestDispatchIgnoresNonExistingReceivers(t *testing.T) {
 	d.Subscribe(client2)
 	d.Subscribe(client3)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, 987654321, clientId3}, &body1))
+	d.Dispatch(newRelayMessage(clientId1, []uint64{clientId2, 987654321, clientId3}, &body1))
 
 	assert.Len(client1.received, 0)
 
@@ -194,9 +194,9 @@ func TestDispatchIgnoresNonExistingReceivers(t *testing.T) {
 func TestDispatchNotSendingToUnsubscribedClients(t *testing.T) {
 	body1 := "test message\nbody 1"
 
-	clientId1 := int64(42)
-	clientId2 := int64(100500)
-	clientId3 := int64(9001)
+	clientId1 := uint64(42)
+	clientId2 := uint64(100500)
+	clientId3 := uint64(9001)
 
 	client1 := newMockedClient(clientId1)
 	client2 := newMockedClient(clientId2)
@@ -211,7 +211,7 @@ func TestDispatchNotSendingToUnsubscribedClients(t *testing.T) {
 
 	d.Unsubscribe(client2)
 
-	d.Dispatch(newRelayMessage(clientId1, []int64{clientId2, clientId3}, &body1))
+	d.Dispatch(newRelayMessage(clientId1, []uint64{clientId2, clientId3}, &body1))
 
 	assert.Len(client1.received, 0)
 	assert.Len(client2.received, 0)
@@ -224,11 +224,11 @@ func TestDispatchNotSendingToUnsubscribedClients(t *testing.T) {
  * Helpers
  */
 
-func assertSentMessageContainsClient(assert *assert.Assertions, sent string, clientId int64) {
+func assertSentMessageContainsClient(assert *assert.Assertions, sent string, clientId uint64) {
 	assert.Contains(sent, fmt.Sprintf("%d", clientId))
 }
 
-func assertSentMessageNotContainsClient(assert *assert.Assertions, sent string, clientId int64) {
+func assertSentMessageNotContainsClient(assert *assert.Assertions, sent string, clientId uint64) {
 	assert.NotContains(sent, fmt.Sprintf("%d", clientId))
 }
 
@@ -237,16 +237,16 @@ func assertSentMessageNotContainsClient(assert *assert.Assertions, sent string, 
  */
 
 type MockedClient struct {
-	id int64
+	id uint64
 	mock.Mock
 	received []string
 }
 
-func newMockedClient(id int64) *MockedClient {
+func newMockedClient(id uint64) *MockedClient {
 	return &MockedClient{id: id}
 }
 
-func (c *MockedClient) Id() int64 {
+func (c *MockedClient) Id() uint64 {
 	return c.id
 }
 

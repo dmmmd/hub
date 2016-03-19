@@ -11,29 +11,29 @@ func TestMessageImplementsMessageInterface(t *testing.T) {
 
 func TestRelayCommandReturnsRelay(t *testing.T) {
 	body := "testBody"
-	m := newRelayMessage(9001, []int64{100500, 42}, &body)
+	m := newRelayMessage(9001, []uint64{100500, 42}, &body)
 
 	assert.Equal(t, MessageTypeRelay, m.Command())
 }
 
 func TestRelaySenderReturnsSender(t *testing.T) {
-	sender := int64(42)
+	sender := uint64(42)
 	body := "testBody"
-	m := newRelayMessage(sender, []int64{100500, 42}, &body)
+	m := newRelayMessage(sender, []uint64{100500, 42}, &body)
 
 	assert.Equal(t, sender, m.Sender())
 }
 
 func TestRelayBodyReturnsBody(t *testing.T) {
 	body := "testBody\nline2 foobar"
-	m := newRelayMessage(9001, []int64{100500, 42}, &body)
+	m := newRelayMessage(9001, []uint64{100500, 42}, &body)
 
 	assert.Equal(t, body, *m.Body())
 }
 
 func TestRelayReceiversReturnsReceivers(t *testing.T) {
 	body := "testBody"
-	receivers := []int64{100500, 42}
+	receivers := []uint64{100500, 42}
 	m := newRelayMessage(9001, receivers, &body)
 	r := m.Receivers()
 
@@ -49,7 +49,7 @@ func TestIdentityCommandReturnsIdentity(t *testing.T) {
 }
 
 func TestIdentitySenderReturnsSender(t *testing.T) {
-	sender := int64(42)
+	sender := uint64(42)
 	m := newIdentityMessage(sender)
 
 	assert.Equal(t, sender, m.Sender())
@@ -75,7 +75,7 @@ func TestListCommandReturnsList(t *testing.T) {
 }
 
 func TestListSenderReturnsSender(t *testing.T) {
-	sender := int64(42)
+	sender := uint64(42)
 	m := newListMessage(sender)
 
 	assert.Equal(t, sender, m.Sender())
