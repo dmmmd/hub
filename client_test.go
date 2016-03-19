@@ -14,16 +14,16 @@ func TestClientImplementsClientInterface(t *testing.T) {
 
 func TestIdReturnsId(t *testing.T) {
 	id := uint64(42)
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
 	c := newClient(id, conn)
 	assert.Equal(t, id, c.Id())
 }
 
 func TestNextMessageReturnsIdentityMessage(t *testing.T) {
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
-	conn.AddExpectedLine(MessageTypeIdentity)
+	conn.addExpectedLine(MessageTypeIdentity)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -32,9 +32,9 @@ func TestNextMessageReturnsIdentityMessage(t *testing.T) {
 }
 
 func TestNextMessageReturnsListMessage(t *testing.T) {
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
-	conn.AddExpectedLine(MessageTypeList)
+	conn.addExpectedLine(MessageTypeList)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -45,16 +45,16 @@ func TestNextMessageReturnsListMessage(t *testing.T) {
 func TestNextMessageReturnsRelayMessage(t *testing.T) {
 	boundary := "testBoundary"
 
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
-	conn.AddExpectedLine(MessageTypeRelay)
-	conn.AddExpectedLine("100500,42,56")
-	conn.AddExpectedLine(BoundaryPrefix + boundary)
-	conn.AddExpectedLine("foobar 1")
-	conn.AddExpectedLine("foobar 2")
-	conn.AddExpectedLine("")
-	conn.AddExpectedLine("foobar 3")
-	conn.AddExpectedLine(boundary)
+	conn.addExpectedLine(MessageTypeRelay)
+	conn.addExpectedLine("100500,42,56")
+	conn.addExpectedLine(BoundaryPrefix + boundary)
+	conn.addExpectedLine("foobar 1")
+	conn.addExpectedLine("foobar 2")
+	conn.addExpectedLine("")
+	conn.addExpectedLine("foobar 3")
+	conn.addExpectedLine(boundary)
 
 	c := newClient(42, conn)
 	message, _ := c.NextMessage()
@@ -72,13 +72,13 @@ func TestNextMessageReturnsRelayMessage(t *testing.T) {
 }
 
 func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
-	conn.AddExpectedLine("testInvalidCommand")
-	conn.AddExpectedLine("100500,42,56")
-	conn.AddExpectedLine(BoundaryPrefix + "TEST")
-	conn.AddExpectedLine("foobar")
-	conn.AddExpectedLine("TEST")
+	conn.addExpectedLine("testInvalidCommand")
+	conn.addExpectedLine("100500,42,56")
+	conn.addExpectedLine(BoundaryPrefix + "TEST")
+	conn.addExpectedLine("foobar")
+	conn.addExpectedLine("TEST")
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -92,13 +92,13 @@ func TestNextMessageReturnsErrorOnInvalidCommand(t *testing.T) {
 }
 
 func TestNextMessageReturnsErrorOnInvalidReceivers(t *testing.T) {
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
-	conn.AddExpectedLine(MessageTypeRelay)
-	conn.AddExpectedLine("100500,4foo2,56")
-	conn.AddExpectedLine(BoundaryPrefix + "TEST")
-	conn.AddExpectedLine("foobar")
-	conn.AddExpectedLine("TEST")
+	conn.addExpectedLine(MessageTypeRelay)
+	conn.addExpectedLine("100500,4foo2,56")
+	conn.addExpectedLine(BoundaryPrefix + "TEST")
+	conn.addExpectedLine("foobar")
+	conn.addExpectedLine("TEST")
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -112,7 +112,7 @@ func TestNextMessageReturnsErrorOnInvalidReceivers(t *testing.T) {
 }
 
 func TestNextMessageReturnsErrorOnReadError(t *testing.T) {
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 
 	c := newClient(42, conn)
 	message, err := c.NextMessage()
@@ -128,7 +128,7 @@ func TestNextMessageReturnsErrorOnReadError(t *testing.T) {
 func TestSendWritesToConnection(t *testing.T) {
 	messages := []string{"testMessage1", "test\nMessage2"}
 
-	conn := new(MockedConnection)
+	conn := new(ClientMockedConnection)
 	conn.On("Write", messages[0]).Return(nil)
 	conn.On("Write", messages[1]).Return(nil)
 
@@ -147,19 +147,19 @@ func TestSendWritesToConnection(t *testing.T) {
  * Mocks
  */
 
-type MockedConnection struct {
+type ClientMockedConnection struct {
 	mock.Mock
 	lines   []string
 	written []string
 }
 
-func (c *MockedConnection) Write(message string) error {
+func (c *ClientMockedConnection) Write(message string) error {
 	args := c.Called(message)
 	c.written = append(c.written, message)
 	return args.Error(0)
 }
 
-func (c *MockedConnection) Read() (string, error) {
+func (c *ClientMockedConnection) Read() (string, error) {
 	if len(c.lines) > 0 {
 		line := c.lines[0]
 		c.lines = c.lines[1:]
@@ -169,10 +169,10 @@ func (c *MockedConnection) Read() (string, error) {
 	return "", errors.New("testConnectionReadError")
 }
 
-func (c *MockedConnection) Close() {
+func (c *ClientMockedConnection) Close() {
 	c.Called()
 }
 
-func (c *MockedConnection) AddExpectedLine(line string) {
+func (c *ClientMockedConnection) addExpectedLine(line string) {
 	c.lines = append(c.lines, line+"\n")
 }

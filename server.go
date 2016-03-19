@@ -15,6 +15,7 @@ func (s *Server) Serve(connection ConnectionInterface) {
 
 	d := s.dispatcher
 	d.Subscribe(client)
+	defer d.Unsubscribe(client)
 
 	for {
 		message, err := client.NextMessage()
@@ -23,7 +24,6 @@ func (s *Server) Serve(connection ConnectionInterface) {
 		case err == nil:
 			d.Dispatch(message)
 		case err.ConnectionError():
-			d.Unsubscribe(client)
 			return
 			// case err.InvalidMessage(): // Just continue
 		}
