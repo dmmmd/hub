@@ -22,7 +22,7 @@ func (c *Connection) Write(message string) error {
 }
 
 func (c *Connection) Read() (string, error) {
-	bytes := make([]byte, 1048576)
+	bytes := make([]byte, 1100000)
 	len, err := c.conn.Read(bytes)
 
 	if err != nil {
